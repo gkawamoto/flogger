@@ -98,4 +98,4 @@ Logger.prototype.set_level = function (new_level)
 
 function createLogger () { return new Logger(arguments) };
 
-module.exports = createLogger;
+module.exports = createLogger();
