@@ -1,7 +1,7 @@
 {
   "name": "flogger",
-  "version": "0.0.1",
-  "description": "simplest webservices",
+  "version": "0.0.2",
+  "description": "simplest logger",
   "main": "index.js",
   "scripts": {
     "test": "node test.js"
