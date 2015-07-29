@@ -12,15 +12,28 @@ function __stack ()
 	return stack;
 };
 
+function stack_step ()
+{
+	var s = __stack();
+	var k = -1;
+	while (s[++k])
+	{
+		if (s[k].getFileName() != module.filename)
+			break;
+	};
+	return s[k];
+}
+
 function current_line ()
 {
-	var s = __stack()[3];
-	return util.format('%s:%s', s.getFileName().split(path.sep).pop(), s.getLineNumber());
+	var s = stack_step();	
+	return util.format('%s:%s/%s', s.getFileName().split(path.sep).pop(), s.getLineNumber(), s.getFunction().name);
 };
 
 function current_file ()
 {
-	var f = __stack()[3].getFileName();
+	var f = stack_step().getFileName();
+	//console.log(f);
 	return f;
 }
 
@@ -52,50 +65,53 @@ var levels = {
 
 var current_level = {};
 
-function Logger () {
+function Flogger () {
 	current_level[current_file()] = levels['ALL'];
 };
-Logger.prototype.info = function ()
+Flogger.prototype.info = function ()
 {
 	this.do_out('INFO', arguments);
 }
-Logger.prototype.debug = function ()
+Flogger.prototype.debug = function ()
 {
 	this.do_out('DEBUG', arguments);
 }
-Logger.prototype.trace = function ()
+Flogger.prototype.trace = function ()
 {
 	this.do_out('TRACE', arguments);
 }
-Logger.prototype.error = function ()
+Flogger.prototype.error = function ()
 {
 	this.do_err('ERROR', arguments);
 }
-Logger.prototype.warn = function ()
+Flogger.prototype.warn = function ()
 {
 	this.do_err('WARN', arguments);
 }
-Logger.prototype.do_err = function (level, args)
+Flogger.prototype.do_err = function (level, args)
 {
-	if (levels[level] < this.current_level)
+	var f = stack_step();
+	if (levels[level] < current_level[f.getFileName()])
 		return;
 	var msg = util.format.apply(util, args);
 	msg = util.format.apply(util, ['[%s] %s (%s) %s', now(), level, current_line()].concat(msg));
 	console.error(msg);
 }
-Logger.prototype.do_out = function (level, args)
+Flogger.prototype.do_out = function (level, args)
 {
-	if (levels[level] < this.current_level)
+	var f = stack_step();
+	if (levels[level] < current_level[f.getFileName()])
 		return;
 	var msg = util.format.apply(util, args);
 	msg = util.format.apply(util, ['[%s] %s (%s) %s', now(), level, current_line()].concat(msg));
-	console.info(msg);
+	//console.log('do_out', f.toString());
+	console.log(msg);
 }
-Logger.prototype.set_level = function (new_level)
+Flogger.prototype.set_level = function (new_level)
 {
 	current_level[current_file()] = levels[new_level.toUpperCase().trim()];
 }
 
-function createLogger () { return new Logger(arguments) };
+function createFlogger () { return new Flogger(arguments) };
 
-module.exports = createLogger();
+module.exports = createFlogger();
