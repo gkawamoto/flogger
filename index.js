@@ -52,6 +52,11 @@ function now ()
 	);
 }
 
+function tick ()
+{
+	return new Date().getTime();
+}
+
 var levels = {
 	'ALL':0,
 	'TRACE':1,
@@ -110,6 +115,13 @@ Flogger.prototype.do_out = function (level, args)
 Flogger.prototype.set_level = function (new_level)
 {
 	current_level[current_file()] = levels[new_level.toUpperCase().trim()];
+}
+Flogger.prototype.profile = function ()
+{
+	if (arguments.length === 0)
+		return {time:tick()};
+
+	return tick() - arguments[0].time;
 }
 
 function createFlogger () { return new Flogger(arguments) };
