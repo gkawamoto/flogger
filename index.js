@@ -27,7 +27,9 @@ function stack_step ()
 function current_line ()
 {
 	var s = stack_step();	
-	return util.format('%s:%s/%s', s.getFileName().split(path.sep).pop(), s.getLineNumber(), s.getFunction().name);
+	var function_name = s.getFunction().name;
+	if (function_name.length === 0) function_name = '<anonymous>';
+	return util.format('%s:%s/%s', s.getFileName().split(path.sep).pop(), s.getLineNumber(), function_name);
 };
 
 function current_file ()
