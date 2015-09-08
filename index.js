@@ -28,8 +28,7 @@ function current_line ()
 {
 	var s = stack_step();	
 	var function_name = s.getFunction().name;
-	if (function_name.length === 0) function_name = '<anonymous>';
-	return util.format('%s:%s/%s', s.getFileName().split(path.sep).pop(), s.getLineNumber(), function_name);
+	return util.format('%s:%s', s.getFileName().split(path.sep).pop(), s.getLineNumber());
 };
 
 function current_file ()
@@ -101,7 +100,7 @@ Flogger.prototype.do_err = function (level, args)
 	if (levels[level] < current_level[f.getFileName()])
 		return;
 	var msg = util.format.apply(util, args);
-	msg = util.format.apply(util, ['[%s] %s (%s) %s', now(), level, current_line()].concat(msg));
+	msg = util.format.apply(util, ['[%s] #%s %s (%s) %s', now(), process.pid, level, current_line()].concat(msg));
 	console.error(msg);
 }
 Flogger.prototype.do_out = function (level, args)
@@ -110,7 +109,7 @@ Flogger.prototype.do_out = function (level, args)
 	if (levels[level] < current_level[f.getFileName()])
 		return;
 	var msg = util.format.apply(util, args);
-	msg = util.format.apply(util, ['[%s] %s (%s) %s', now(), level, current_line()].concat(msg));
+	msg = util.format.apply(util, ['[%s] #%s %s (%s) %s', now(), process.pid, level, current_line()].concat(msg));
 	//console.log('do_out', f.toString());
 	console.log(msg);
 }
