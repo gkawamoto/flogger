@@ -72,7 +72,7 @@ var levels = {
 var current_level = {};
 
 function Flogger () {
-	current_level[current_file()] = levels['ALL'];
+	current_level[current_file()] = levels[(process.env['GLOBAL_LOG_LEVEL'] || 'all').toUpperCase()];
 };
 Flogger.prototype.info = function ()
 {
