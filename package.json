@@ -1,6 +1,6 @@
 {
   "name": "flogger",
-  "version": "0.0.6",
+  "version": "0.1.0",
   "description": "simplest logger",
   "main": "index.js",
   "scripts": {
