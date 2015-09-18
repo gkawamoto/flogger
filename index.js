@@ -1,3 +1,5 @@
+var fs = require('fs');
+var os = require('os');
 var path = require('path');
 var util = require('util');
 
@@ -33,9 +35,7 @@ function current_line ()
 
 function current_file ()
 {
-	var f = stack_step().getFileName();
-	//console.log(f);
-	return f;
+	return stack_step().getFileName();
 }
 
 function now ()
@@ -70,52 +70,71 @@ var levels = {
 };
 
 var current_level = {};
+var streams = {'ALL':[process.stdout]};
 
 function Flogger () {
 	current_level[current_file()] = levels[(process.env['GLOBAL_LOG_LEVEL'] || 'all').toUpperCase()];
 };
 Flogger.prototype.info = function ()
 {
-	this.do_out('INFO', arguments);
+	this.write_stream('INFO', arguments);
 }
 Flogger.prototype.debug = function ()
 {
-	this.do_out('DEBUG', arguments);
+	this.write_stream('DEBUG', arguments);
 }
 Flogger.prototype.trace = function ()
 {
-	this.do_out('TRACE', arguments);
+	this.write_stream('TRACE', arguments);
 }
 Flogger.prototype.error = function ()
 {
-	this.do_err('ERROR', arguments);
+	this.write_stream('ERROR', arguments);
 }
 Flogger.prototype.warn = function ()
 {
-	this.do_err('WARN', arguments);
+	this.write_stream('WARN', arguments);
 }
-Flogger.prototype.do_err = function (level, args)
+Flogger.prototype.write_stream = function (level, args)
 {
 	var f = stack_step();
 	if (levels[level] < current_level[f.getFileName()])
 		return;
 	var msg = util.format.apply(util, args);
 	msg = util.format.apply(util, ['[%s] #%s %s (%s) %s', now(), process.pid, level, current_line()].concat(msg));
-	console.error(msg);
-}
-Flogger.prototype.do_out = function (level, args)
-{
-	var f = stack_step();
-	if (levels[level] < current_level[f.getFileName()])
-		return;
-	var msg = util.format.apply(util, args);
-	msg = util.format.apply(util, ['[%s] #%s %s (%s) %s', now(), process.pid, level, current_line()].concat(msg));
-	//console.log('do_out', f.toString());
-	console.log(msg);
+	msg += os.EOL;
+	var outputs = [level, 'ALL'];
+	for (var j = 0; j < outputs.length; j++)
+	{
+		if (streams[outputs[j]])
+			for (var k = 0; k < streams[outputs[j]].length; k++)
+				streams[outputs[j]][k].write(msg);
+	}
+	//streams['ALL'].write(msg);
 }
 Flogger.prototype.set_level = function (new_level)
 {
 	current_level[current_file()] = levels[new_level.toUpperCase().trim()];
+}
+Flogger.prototype.add_log_output = function (level, target)
+{
+	level = level.trim().toUpperCase();
+
+	if (levels[level] === undefined)
+		throw new Error("Invalid level '" + level + "'");
+	if (target instanceof Array)
+		return streams[level] = target;
+
+	if (target === null || target === undefined)
+		target = levels[level] > levels['INFO'] ? process.stderr : process.stdout;
+	if (typeof target.valueOf() == 'string')
+		target = fs.openSync(target, 'a');
+	if (typeof target.valueOf() == 'number')
+		target = fs.createWriteStream('/dev/null', {'flags':'a', 'fd':target});
+	if (!streams[level])
+		streams[level] = [];
+
+	streams[level].push(target);
 }
 Flogger.prototype.profile = function ()
 {
