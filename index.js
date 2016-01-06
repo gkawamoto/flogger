@@ -30,7 +30,7 @@ function current_line ()
 {
 	var s = stack_step();	
 	var function_name = s.getFunction().name;
-	return util.format('%s:%s', s.getFileName().split(path.sep).pop(), s.getLineNumber());
+	return util.format('%s:%s', (s.getFileName()||'<anonymous>').split(path.sep).pop(), s.getLineNumber());
 };
 
 function current_file ()
